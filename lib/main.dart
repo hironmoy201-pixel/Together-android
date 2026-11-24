@@ -1,13 +1,22 @@
-import 'dart:async';
+  import 'dart:async';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const TogetherApp());
-}
+// --------------------------------------------------
+// APP COLORS
+// --------------------------------------------------
 
 const Color purple = Color(0xFF9B72FF);
 const Color background = Color(0xFF101014);
 const Color cardColor = Color(0xFF1D1D25);
+const Color secondaryText = Color(0xFFAAAAAA);
+
+// --------------------------------------------------
+// MAIN APP
+// --------------------------------------------------
+
+void main() {
+  runApp(const TogetherApp());
+}
 
 class TogetherApp extends StatelessWidget {
   const TogetherApp({super.key});
@@ -15,25 +24,29 @@ class TogetherApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'TOGETHER',
-
-      theme: ThemeData.dark().copyWith(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
         scaffoldBackgroundColor: background,
         colorScheme: ColorScheme.fromSeed(
           seedColor: purple,
           brightness: Brightness.dark,
         ),
+        useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: background,
+          elevation: 0,
+        ),
       ),
-
       home: const SplashScreen(),
     );
   }
 }
 
-// ======================================
-// ANIMATED SPLASH SCREEN
-// ======================================
+// --------------------------------------------------
+// SPLASH SCREEN
+// --------------------------------------------------
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -44,53 +57,50 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
 
-  late AnimationController controller;
-  late Animation<double> scale;
-  late Animation<double> fade;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
 
-    controller = AnimationController(
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 1400),
     );
 
-    scale = CurvedAnimation(
-      parent: controller,
-      curve: Curves.elasticOut,
+    _scaleAnimation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.elasticOut,
+      ),
     );
 
-    fade = CurvedAnimation(
-      parent: controller,
-      curve: Curves.easeIn,
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeIn,
+      ),
     );
 
-    controller.forward();
+    _controller.forward();
 
-    Timer(const Duration(milliseconds: 2800), () {
+    _timer = Timer(const Duration(milliseconds: 2800), () {
       if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 900),
-          pageBuilder: (_, animation, secondaryAnimation) =>
-              const HomePage(),
-          transitionsBuilder: (_, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(
-                scale: Tween<double>(
-                  begin: 0.96,
-                  end: 1,
-                ).animate(animation),
-                child: child,
-              ),
-            );
-          },
+        MaterialPageRoute(
+          builder: (context) => const HomePage(),
         ),
       );
     });
@@ -98,68 +108,82 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    controller.dispose();
+    _timer?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: background,
-      body: Center(
-        child: FadeTransition(
-          opacity: fade,
-          child: ScaleTransition(
-            scale: scale,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-
-                Container(
-                  height: 105,
-                  width: 105,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: purple.withOpacity(0.15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: purple.withOpacity(0.45),
-                        blurRadius: 45,
-                        spreadRadius: 8,
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.center,
+            radius: 0.9,
+            colors: [
+              Color(0xFF29203D),
+              background,
+            ],
+          ),
+        ),
+        child: Center(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: ScaleTransition(
+              scale: _scaleAnimation,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 105,
+                    width: 105,
+                    decoration: BoxDecoration(
+                      color: purple.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: purple.withOpacity(0.7),
+                        width: 2,
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: purple.withOpacity(0.3),
+                          blurRadius: 35,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      size: 75,
+                      color: purple,
+                    ),
                   ),
 
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: purple,
-                    size: 75,
+                  const SizedBox(height: 28),
+
+                  const Text(
+                    'TOGETHER',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 5,
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 28),
+                  const SizedBox(height: 10),
 
-                const Text(
-                  'TOGETHER',
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 5,
+                  const Text(
+                    'Different places. One experience.',
+                    style: TextStyle(
+                      color: secondaryText,
+                      fontSize: 14,
+                      letterSpacing: 1,
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 12),
-
-                const Text(
-                  'Different places. One experience.',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                    letterSpacing: 1,
-                  ),
-                ),
-
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -168,9 +192,9 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-// ======================================
-// HOME PAGE
-// ======================================
+// --------------------------------------------------
+// HOME PAGE WITH BOTTOM NAVIGATION
+// --------------------------------------------------
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -180,7 +204,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   int selectedIndex = 0;
 
   final List<Widget> pages = const [
@@ -192,123 +215,127 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.04, 0),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
-              ),
-            );
-          },
-          child: KeyedSubtree(
-            key: ValueKey(selectedIndex),
-            child: pages[selectedIndex],
-          ),
+        child: IndexedStack(
+          index: selectedIndex,
+          children: pages,
         ),
       ),
-
       bottomNavigationBar: NavigationBar(
         backgroundColor: cardColor,
-        indicatorColor: purple.withOpacity(0.22),
+        indicatorColor: purple.withOpacity(0.2),
         selectedIndex: selectedIndex,
-
         onDestinationSelected: (index) {
           setState(() {
             selectedIndex = index;
           });
         },
-
         destinations: const [
-
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home, color: purple),
+            selectedIcon: Icon(Icons.home_rounded),
             label: 'Home',
           ),
-
           NavigationDestination(
-            icon: Icon(Icons.groups_outlined),
-            selectedIcon: Icon(Icons.groups, color: purple),
+            icon: Icon(Icons.video_library_outlined),
+            selectedIcon: Icon(Icons.video_library_rounded),
             label: 'Rooms',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat, color: purple),
+            selectedIcon: Icon(Icons.chat_bubble_rounded),
             label: 'Messages',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: purple),
+            selectedIcon: Icon(Icons.person_rounded),
             label: 'Profile',
           ),
-
         ],
       ),
     );
   }
 }
 
-// ======================================
+// --------------------------------------------------
 // HOME SCREEN
-// ======================================
+// --------------------------------------------------
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  void openRoom(BuildContext context, String type) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return RoomSetupPage(roomType: type);
+        },
+        transitionsBuilder: (
+          context,
+          animation,
+          secondaryAnimation,
+          child,
+        ) {
+          final slide = Tween<Offset>(
+            begin: const Offset(0.08, 0),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            ),
+          );
+
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: slide,
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 350),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(22),
-
-      child: ListView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          const SizedBox(height: 15),
+          const SizedBox(height: 18),
 
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-
-              const Icon(
-                Icons.play_circle_fill,
-                color: purple,
-                size: 38,
-              ),
-
-              const SizedBox(width: 10),
-
               const Text(
                 'TOGETHER',
                 style: TextStyle(
-                  fontSize: 25,
+                  fontSize: 23,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+                  letterSpacing: 3,
                 ),
               ),
-
-              const Spacer(),
-
-              const Icon(
-                Icons.notifications_none,
-                size: 27,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.notifications_none_rounded,
+                  color: Colors.white,
+                ),
               ),
-
             ],
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 35),
 
           const Text(
             'Different places.',
@@ -322,37 +349,40 @@ class HomeScreen extends StatelessWidget {
             'One experience.',
             style: TextStyle(
               fontSize: 29,
-              color: purple,
               fontWeight: FontWeight.bold,
+              color: purple,
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
           const Text(
             'Watch movies and shows together, wherever you are.',
             style: TextStyle(
-              color: Colors.white60,
+              color: secondaryText,
               fontSize: 15,
+              height: 1.5,
             ),
           ),
 
           const SizedBox(height: 35),
 
           AnimatedActionCard(
-            icon: Icons.add_circle_outline,
+            icon: Icons.add_circle_outline_rounded,
             title: 'Create a room',
-            subtitle: 'Start a watch party and invite friends.',
-            onTap: () => openRoom(context, true),
+            subtitle: 'Start a watch party with your friends',
+            buttonText: 'Create room',
+            onTap: () => openRoom(context, 'Create'),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
 
           AnimatedActionCard(
-            icon: Icons.login,
+            icon: Icons.login_rounded,
             title: 'Join a room',
-            subtitle: 'Enter a room code and watch together.',
-            onTap: () => openRoom(context, false),
+            subtitle: 'Enter a room code and watch together',
+            buttonText: 'Join room',
+            onTap: () => openRoom(context, 'Join'),
           ),
 
           const SizedBox(height: 35),
@@ -360,61 +390,123 @@ class HomeScreen extends StatelessWidget {
           const Text(
             'Your experience',
             style: TextStyle(
-              fontSize: 21,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
 
-          const SizedBox(height: 15),
+          const SizedBox(height: 16),
 
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(18),
-            ),
-
-            child: const Row(
-              children: [
-
-                Icon(
-                  Icons.movie_outlined,
-                  color: purple,
-                  size: 35,
+          Row(
+            children: [
+              Expanded(
+                child: InfoCard(
+                  icon: Icons.sync_rounded,
+                  title: 'Sync',
+                  subtitle: 'Watch together',
                 ),
-
-                SizedBox(width: 15),
-
-                Expanded(
-                  child: Text(
-                    'Your watch parties will appear here.',
-                    style: TextStyle(color: Colors.white70),
-                  ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: InfoCard(
+                  icon: Icons.chat_rounded,
+                  title: 'Chat',
+                  subtitle: 'Stay connected',
                 ),
-
-              ],
-            ),
+              ),
+            ],
           ),
 
+          const SizedBox(height: 13),
+
+          Row(
+            children: [
+              Expanded(
+                child: InfoCard(
+                  icon: Icons.lock_outline_rounded,
+                  title: 'Private',
+                  subtitle: 'Your own rooms',
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: InfoCard(
+                  icon: Icons.people_outline_rounded,
+                  title: 'Together',
+                  subtitle: 'With your friends',
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 25),
         ],
       ),
     );
   }
+}
 
-  void openRoom(BuildContext context, bool create) {
+// --------------------------------------------------
+// ANIMATED ACTION CARD
+// --------------------------------------------------
 
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 500),
+class AnimatedActionCard extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String buttonText;
+  final VoidCallback onTap;
 
-        pageBuilder: (_, animation, secondaryAnimation) =>
-            RoomSetupPage(create: create),
+  const AnimatedActionCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.buttonText,
+    required this.onTap,
+  });
 
-        transitionsBuilder: (_, animation, secondaryAnimation, child) {
+  @override
+  State<AnimatedActionCard> createState() =>
+      _AnimatedActionCardState();
+}
 
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset
+class _AnimatedActionCardState extends State<AnimatedActionCard> {
+  bool isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() {
+          isPressed = true;
+        });
+      },
+      onTapUp: (_) {
+        setState(() {
+          isPressed = false;
+        });
+      },
+      onTapCancel: () {
+        setState(() {
+          isPressed = false;
+        });
+      },
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: isPressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: purple.withOpacity(0.25),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+             
